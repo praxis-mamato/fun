@@ -40,6 +40,7 @@ nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);bord
 .notice:empty{display:none}
 /* scoreboard */
 .score{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.prize{margin:0;background:var(--gold-soft);color:var(--ink);border-radius:8px;padding:10px 12px;font-size:14.5px}
 .score h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
 .bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
@@ -133,6 +134,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px}
   <section class="pane on" id="pane-hunt">
     <div class="score">
       <h2>Leaderboard</h2>
+      <p class="prize">👑 <b>The prize:</b> the winner is crowned at the speakeasy on Monday night and wears the I ❤ NY crown and sash.</p>
       <div>
         <div class="bar" aria-hidden="true"><i id="teamBar"></i></div>
         <div class="bar-label" id="teamLabel">Team progress</div>
