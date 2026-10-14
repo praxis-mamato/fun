@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NYC Hunt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a phone-first app. Sticky tab bar at top; three panes (Hunt, Photos, Plan). Hunt is a list of challenge cards grouped by day. */
+:root{
+  --bg:#f6f3f7; --paper:#ffffff; --ink:#1d1622; --muted:#6b5f73; --line:#e4dde8;
+  --accent:#b0175a; --accent-soft:#fbe6ef; --gold:#8a6510; --gold-soft:#f8efd9; --done:#1f7a4d; --done-soft:#e3f4ea;
+  --display:"Gloock", Georgia, "Times New Roman", serif;
+  --body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141018; --paper:#1d1823; --ink:#f1ebf4; --muted:#a99db1; --line:#30283a;
+  --accent:#f0679f; --accent-soft:#3a1a2a; --gold:#e3bb5c; --gold-soft:#33291a; --done:#5fd197; --done-soft:#17301f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141018; --paper:#1d1823; --ink:#f1ebf4; --muted:#a99db1; --line:#30283a;
+  --accent:#f0679f; --accent-soft:#3a1a2a; --gold:#e3bb5c; --gold-soft:#33291a; --done:#5fd197; --done-soft:#17301f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;margin:0;padding:0 16px 64px}
+.wrap{max-width:720px;margin:0 auto}
+a{color:var(--accent)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{padding:24px 0 12px;display:grid;gap:6px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,9vw,60px);line-height:1;margin:0}
+.sub{color:var(--muted);font-size:15px;margin:0}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:6px;padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:18px}
+nav.tabs button{flex:1;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:9px 6px;font-weight:600;font-size:15px}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pane{display:none;gap:22px}
+.pane.on{display:grid}
+.notice{background:var(--gold-soft);color:var(--ink);border-radius:10px;padding:12px 14px;font-size:14.5px}
+.notice:empty{display:none}
+/* scoreboard */
+.score{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.score h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.bar-label{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.board{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.board li{display:grid;grid-template-columns:28px 32px 1fr auto;gap:10px;align-items:center}
+.board .rank{font-family:var(--mono);color:var(--muted);font-size:13px}
+.board img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+.board .pts{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.empty{color:var(--muted);font-size:14.5px}
+/* challenges */
+.day h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 10px;border-bottom:2px solid var(--ink);padding-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.day h3 small{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.cards{display:grid;gap:10px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.card.done{border-color:var(--done)}
+.card-top{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.card .name{font-weight:600;font-size:16.5px}
+.card .hint{color:var(--muted);font-size:14px}
+.pts-pill{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.card.done .pts-pill{background:var(--done-soft);color:var(--done)}
+.card-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.shoot{display:inline-flex;align-items:center;gap:6px;border:none;background:var(--accent);color:#fff;border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px}
+.shoot[disabled]{opacity:.6;cursor:progress}
+.shoot.again{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.status{font-size:13px;color:var(--muted)}
+.status.err{color:var(--accent)}
+.thumbs{display:flex;gap:6px;overflow-x:auto}
+.thumbs:empty{display:none}
+.thumbs button{border:none;padding:0;background:none;flex:none}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;display:block;background:var(--line)}
+/* photo wall */
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{border:none;padding:0;background:var(--paper);border-radius:10px;overflow:hidden;text-align:left;display:grid;border:1px solid var(--line)}
+.tile img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--line)}
+.tile span{padding:6px 8px;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* plan */
+.plan-day{display:grid;gap:6px}
+.plan-day.today{background:var(--accent-soft);border-radius:12px;padding:12px}
+.plan-day h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.plan-day h3 small{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-left:8px}
+.plan-day ol{list-style:none;margin:0;padding:0;display:grid}
+.plan-day li{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+.plan-day li:last-child{border-bottom:none}
+.plan-day .t{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding-top:2px}
+/* lightbox */
+dialog{border:none;padding:0;background:var(--paper);color:var(--ink);border-radius:14px;max-width:min(92vw,720px);width:100%}
+dialog::backdrop{background:rgb(0 0 0 / .75)}
+dialog img{width:100%;max-height:70vh;object-fit:contain;display:block;background:#000}
+.lb-meta{padding:12px 14px;display:grid;gap:4px}
+.lb-meta .who{font-weight:600}
+.lb-meta .what{color:var(--muted);font-size:14px}
+.lb-actions{display:flex;gap:8px;justify-content:flex-end;padding:0 14px 14px}
+.lb-actions button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font-size:14px}
+.lb-actions .del{color:var(--accent);border-color:var(--accent)}
+footer{color:var(--muted);font-size:13px;margin-top:28px}
+.board li{grid-template-columns:28px 32px 1fr auto}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+[hidden]{display:none!important}
+#who{display:grid;gap:8px;margin-bottom:18px}
+#who form{display:flex;gap:8px}
+#who input{flex:1;min-width:0;font:inherit;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+#who .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.linkish{border:none;background:none;color:var(--accent);padding:0;text-decoration:underline}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">NYC · Oct 23 – 27, 2026</div>
+    <h1>The Big Apple Hunt</h1>
+    <p class="sub">Snap each challenge, upload the photo, rack up points. Each challenge scores once per person.</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="hunt">Hunt</button>
+    <button role="tab" aria-selected="false" data-tab="photos">Photos</button>
+    <button role="tab" aria-selected="false" data-tab="plan">Plan</button>
+  </nav>
+
+  <div id="notice" class="notice" role="status"></div>
+
+  <div id="who" class="score">
+    <h2>Who's playing?</h2>
+    <form id="whoForm"><input id="whoInput" maxlength="30" placeholder="Your first name" autocomplete="given-name" aria-label="Your first name"><button class="shoot" type="submit">Join</button></form>
+    <div id="whoSet" class="row" hidden><span>Playing as <b id="whoName"></b></span><button class="linkish" id="whoChange" type="button">Change</button></div>
+  </div>
+
+  <section class="pane on" id="pane-hunt">
+    <div class="score">
+      <h2>Leaderboard</h2>
+      <div>
+        <div class="bar" aria-hidden="true"><i id="teamBar"></i></div>
+        <div class="bar-label" id="teamLabel">Team progress</div>
+      </div>
+      <ol class="board" id="board"><li class="empty">No photos yet. First one to snap takes the lead.</li></ol>
+    </div>
+    <div id="challenges"></div>
+  </section>
+
+  <section class="pane" id="pane-photos">
+    <div id="wall" class="wall"></div>
+    <p id="wallEmpty" class="empty">Nothing here yet. Photos from the hunt show up here for everyone.</p>
+  </section>
+
+  <section class="pane" id="pane-plan">
+    <div id="plan" style="display:grid;gap:18px"></div>
+    <p class="empty">Breakfast is at the hotel every morning. Times are a guide.</p>
+  </section>
+
+  <footer>Anyone with this link can see and add photos, so keep it among the three of you.</footer>
+</div>
+
+<dialog id="lb">
+  <img id="lbImg" alt="">
+  <div class="lb-meta"><span class="who" id="lbWho"></span><span class="what" id="lbWhat"></span></div>
+  <div class="lb-actions">
+    <button class="del" id="lbDel" hidden>Delete my photo</button>
+    <button id="lbClose">Close</button>
+  </div>
+</dialog>
+
+<input type="file" id="picker" accept="image/*" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// ---------- Backend: Supabase project "nyc-trip-hunt" (public publishable key; access limited by row-level security) ----------
+const SB = window.supabase ? window.supabase.createClient("https://zzoolkasgnabemypwhkd.supabase.co", "sb_publishable_4qZegJDKPlWRSSEFxqaCig_upgza0rC") : null;
+const BUCKET = "hunt";
+
+// ---------- App content ----------
+const DAYS = [
+  {key:"fri", label:"Friday", date:"Oct 23"},
+  {key:"sat", label:"Saturday", date:"Oct 24"},
+  {key:"sun", label:"Sunday", date:"Oct 25"},
+  {key:"mon", label:"Monday", date:"Oct 26"},
+  {key:"any", label:"Anytime", date:"All trip"},
+];
+const CHALLENGES = [
+  {id:"fri-squad", day:"fri", pts:5,  name:"Squad has landed", hint:"First group selfie at Newark."},
+  {id:"fri-redsteps", day:"fri", pts:10, name:"Red Steps in Times Square", hint:"All three of you on the TKTS red steps, lights behind you."},
+  {id:"fri-view", day:"fri", pts:15, name:"Toast at The View", hint:"Glasses up with the city spinning below on the 47th floor."},
+  {id:"fri-woowoo", day:"fri", pts:20, name:"Through the secret door", hint:"Proof you made it into The Woo Woo."},
+  {id:"sat-bow", day:"sat", pts:10, name:"Bow Bridge moment", hint:"Central Park's prettiest bridge, all three of you on it."},
+  {id:"sat-bethesda", day:"sat", pts:10, name:"Angel of the Waters", hint:"The fountain at Bethesda Terrace."},
+  {id:"sat-queen", day:"sat", pts:20, name:"Selfie with a queen", hint:"Get a LIPS performer in the shot."},
+  {id:"sat-plaza", day:"sat", pts:15, name:"Champagne at The Plaza", hint:"Coupes clinking at the Champagne Bar."},
+  {id:"sat-bags", day:"sat", pts:10, name:"Fifth Avenue haul", hint:"Shopping bag pose. Bonus style points for a store-front backdrop."},
+  {id:"sat-gatsby", day:"sat", pts:15, name:"Old sport", hint:"Your best 1920s pose under the Gatsby marquee."},
+  {id:"sun-liberty", day:"sun", pts:15, name:"Hi, Lady Liberty", hint:"Statue of Liberty in the frame from the Staten Island Ferry."},
+  {id:"sun-bridge", day:"sun", pts:10, name:"Middle of the Brooklyn Bridge", hint:"Mid-span with the cables behind you."},
+  {id:"sun-washington", day:"sun", pts:15, name:"The DUMBO shot", hint:"Manhattan Bridge framed down Washington Street."},
+  {id:"sun-flea", day:"sun", pts:10, name:"Flea market find", hint:"Show off your best Brooklyn Flea score."},
+  {id:"sun-green", day:"sun", pts:15, name:"Defying gravity", hint:"Wear something green to Wicked and pose at the Gershwin."},
+  {id:"mon-bite", day:"mon", pts:10, name:"Best bite of the food tour", hint:"Your favorite tasting at Chelsea Market."},
+  {id:"mon-highline", day:"mon", pts:10, name:"High Line art", hint:"Pose with a sculpture or mural along the High Line."},
+  {id:"mon-sunset", day:"mon", pts:20, name:"Golden hour by the water", hint:"Sunset over the Hudson from the pier or the boat. Skyline required."},
+  {id:"mon-cruise", day:"mon", pts:15, name:"Dinner on the water", hint:"Dressed up and glasses raised on the Bateaux."},
+  {id:"mon-liberty-night", day:"mon", pts:15, name:"Lady Liberty by night", hint:"Catch her lit up from the boat."},
+  {id:"any-cab", day:"any", pts:5,  name:"Taxi!", hint:"Hailing pose with a yellow cab."},
+  {id:"any-slice", day:"any", pts:10, name:"The New York fold", hint:"Folding a pizza slice the right way."},
+  {id:"any-ilny", day:"any", pts:10, name:"I ❤ NY", hint:"Spot or wear the classic logo."},
+  {id:"any-bagel", day:"any", pts:5,  name:"Bagel break", hint:"Any bagel, any schmear."},
+  {id:"any-pigeon", day:"any", pts:5,  name:"Local resident", hint:"A New York pigeon. Must be in focus."},
+  {id:"any-bravo", day:"any", pts:50, name:"Bravo sighting", hint:"Spot a Bravolebrity in the wild. Jackpot."},
+];
+const PLAN = [
+  {key:"fri", iso:"2026-10-23", title:"Arrive & easy first night", stops:[
+    ["5:57pm","Land at Newark (UA 348)"],["~7:30pm","Check in, Marriott Marquis"],["8:30pm","Dinner at The View (47th floor)"],["Late","The Woo Woo speakeasy (optional)"]]},
+  {key:"sat", iso:"2026-10-24", title:"Park, drag brunch, the Plaza & Gatsby", stops:[
+    ["9:00am","Walk up to Central Park"],["~11:30am","Drag brunch at LIPS"],["1:45pm","Champagne Bar at The Plaza (walk-in)"],["2:45pm","Fifth Avenue shopping"],["4:00pm","Rest and get ready"],["6:00pm","Le Tout Va Bien"],["8:00pm","The Great Gatsby, Broadway Theatre"]]},
+  {key:"sun", iso:"2026-10-25", title:"Ferry, Brooklyn & Wicked", stops:[
+    ["9:00am","1 train to South Ferry"],["9:30am","Staten Island Ferry"],["11:00am","9/11 Memorial"],["12:00pm","Walk the Brooklyn Bridge"],["~1:00pm","Lunch at Cecconi's DUMBO"],["After","Brooklyn Flea"],["5:00pm","Chalong Southern Thai"],["7:00pm","Wicked, Gershwin Theatre"]]},
+  {key:"mon", iso:"2026-10-26", title:"Food tour, Village & dinner cruise", stops:[
+    ["9:15am","Head to Chelsea Market"],["10:00am","Chelsea Market & High Line food tour"],["~1:15pm","West Village & SoHo"],["~3:30pm","Back to the hotel to dress up (semi-formal)"],["~5:30pm","Cab to Chelsea Piers for sunset"],["7:00pm","Bateaux dinner cruise, Pier 61 (board 6:15)"],["After","Nightcap at The View lounge (optional)"]]},
+  {key:"tue", iso:"2026-10-27", title:"Fly home", stops:[]},
+];
+const BY_ID = Object.fromEntries(CHALLENGES.map(c => [c.id, c]));
+
+// ---------- State ----------
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+let myName = store.get("hunt-name") || "";
+let token = store.get("hunt-token");
+if (!token) { token = crypto.randomUUID(); store.set("hunt-token", token); }
+let mine = new Set(JSON.parse(store.get("hunt-mine") || "[]"));   // photo ids this device posted
+let photos = [];
+let pendingChallenge = null;
+const busy = new Set(), errs = {};
+
+const $ = s => document.querySelector(s);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const photoUrl = p => SB.storage.from(BUCKET).getPublicUrl(p.path).data.publicUrl;
+const isMe = name => !!myName && name.toLowerCase() === myName.toLowerCase();
+function avatar(name) {
+  let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  const a = el("span", "av", (name.trim()[0] || "?").toUpperCase());
+  a.style.background = `hsl(${h} 60% 45%)`;
+  return a;
+}
+
+// ---------- Name ----------
+function renderWho() {
+  $("#whoName").textContent = myName || "";
+  $("#whoSet").hidden = !myName;
+  $("#whoForm").hidden = !!myName;
+}
+$("#whoForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("#whoInput").value.trim().slice(0, 30);
+  if (!v) return;
+  myName = v; store.set("hunt-name", v); renderWho(); renderAll();
+});
+$("#whoChange").addEventListener("click", () => { $("#whoInput").value = myName; $("#whoSet").hidden = true; $("#whoForm").hidden = false; $("#whoInput").focus(); });
+
+// ---------- Tabs ----------
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.id === "pane-" + b.dataset.tab));
+  store.set("tab", b.dataset.tab);
+}));
+{ const t = store.get("tab"); if (t) document.querySelector(`nav.tabs [data-tab="${t}"]`)?.click(); }
+
+// ---------- Plan ----------
+function renderPlan() {
+  const today = new Date().toLocaleDateString("en-CA", {timeZone:"America/New_York"});
+  const box = $("#plan"); box.replaceChildren();
+  for (const d of PLAN) {
+    const sec = el("div", "plan-day" + (d.iso === today ? " today" : ""));
+    const h = el("h3", null, d.title); h.append(el("small", null, DAYS.find(x => x.key === d.key)?.label || "Tuesday"));
+    sec.append(h);
+    if (d.stops.length) {
+      const ol = el("ol");
+      for (const [t, w] of d.stops) { const li = el("li"); li.append(el("span", "t", t), el("span", null, w)); ol.append(li); }
+      sec.append(ol);
+    }
+    box.append(sec);
+  }
+}
+
+// ---------- Hunt ----------
+function renderAll() { renderBoard(); renderChallenges(); renderWall(); }
+
+function renderBoard() {
+  const team = new Set(photos.map(p => p.challenge).filter(c => BY_ID[c]));
+  $("#teamBar").style.width = (team.size / CHALLENGES.length * 100) + "%";
+  $("#teamLabel").textContent = `Team: ${team.size} of ${CHALLENGES.length} challenges done`;
+  const per = {};
+  for (const p of photos) { if (!BY_ID[p.challenge]) continue; const k = p.player.toLowerCase(); (per[k] ||= {name:p.player, set:new Set()}).set.add(p.challenge); }
+  const rows = Object.values(per).map(r => ({name:r.name, pts:[...r.set].reduce((s, c) => s + BY_ID[c].pts, 0)})).sort((a, b) => b.pts - a.pts);
+  const board = $("#board"); board.replaceChildren();
+  if (!rows.length) { board.append(el("li", "empty", "No photos yet. First one to snap takes the lead.")); return; }
+  rows.forEach((r, i) => {
+    const li = el("li");
+    li.append(el("span", "rank", "#" + (i + 1)), avatar(r.name), el("span", null, r.name + (isMe(r.name) ? " (you)" : "")), el("span", "pts", r.pts + " pts"));
+    board.append(li);
+  });
+}
+
+function renderChallenges() {
+  const box = $("#challenges"); box.replaceChildren();
+  for (const d of DAYS) {
+    const sec = el("div", "day");
+    const h = el("h3", null, d.label); h.append(el("small", null, d.date));
+    const cards = el("div", "cards");
+    for (const c of CHALLENGES.filter(c => c.day === d.key)) {
+      const done = photos.some(p => p.challenge === c.id && isMe(p.player));
+      const card = el("div", "card" + (done ? " done" : ""));
+      const top = el("div", "card-top");
+      const txt = el("div"); txt.append(el("div", "name", c.name), el("div", "hint", c.hint));
+      top.append(txt, el("span", "pts-pill", done ? "✓ " + c.pts + " pts" : c.pts + " pts"));
+      card.append(top);
+      const thumbs = el("div", "thumbs");
+      for (const p of photos.filter(p => p.challenge === c.id)) {
+        const b = el("button"); b.setAttribute("aria-label", "Open photo");
+        const img = el("img"); img.alt = c.name; img.loading = "lazy"; img.src = photoUrl(p);
+        b.append(img); b.addEventListener("click", () => openPhoto(p)); thumbs.append(b);
+      }
+      card.append(thumbs);
+      if (SB) {
+        const actions = el("div", "card-actions");
+        const btn = el("button", "shoot" + (done ? " again" : ""), busy.has(c.id) ? "Uploading…" : done ? "Add another" : "📸 Snap it");
+        btn.disabled = busy.has(c.id);
+        btn.addEventListener("click", () => {
+          if (!myName) { $("#whoInput").focus(); $("#who").scrollIntoView({behavior:"smooth", block:"center"}); return; }
+          pendingChallenge = c.id; $("#picker").value = ""; $("#picker").click();
+        });
+        actions.append(btn);
+        if (errs[c.id]) actions.append(el("span", "status err", errs[c.id]));
+        card.append(actions);
+      }
+      cards.append(card);
+    }
+    sec.append(h, cards); box.append(sec);
+  }
+}
+
+function renderWall() {
+  const wall = $("#wall"); wall.replaceChildren();
+  $("#wallEmpty").hidden = photos.length > 0;
+  for (const p of photos) {
+    const t = el("button", "tile");
+    const img = el("img"); img.alt = BY_ID[p.challenge]?.name || "Trip photo"; img.loading = "lazy"; img.src = photoUrl(p);
+    t.append(img, el("span", null, p.player + " · " + (BY_ID[p.challenge]?.name || "")));
+    t.addEventListener("click", () => openPhoto(p));
+    wall.append(t);
+  }
+}
+
+// ---------- Lightbox ----------
+let lbPhoto = null;
+function openPhoto(p) {
+  lbPhoto = p;
+  $("#lbImg").src = photoUrl(p);
+  $("#lbImg").alt = BY_ID[p.challenge]?.name || "Trip photo";
+  $("#lbWho").textContent = p.player + (isMe(p.player) ? " (you)" : "");
+  $("#lbWhat").textContent = (BY_ID[p.challenge]?.name || "") + " · " + new Date(p.created_at).toLocaleString([], {weekday:"short", hour:"numeric", minute:"2-digit"});
+  $("#lbDel").hidden = !mine.has(p.id);
+  $("#lb").showModal();
+}
+$("#lbClose").addEventListener("click", () => $("#lb").close());
+$("#lb").addEventListener("click", e => { if (e.target === $("#lb")) $("#lb").close(); });
+$("#lbDel").addEventListener("click", async () => {
+  const p = lbPhoto; if (!p || !confirm("Delete this photo?")) return;
+  const { data, error } = await SB.rpc("delete_hunt_photo", {p_id:p.id, p_token:token});
+  if (error || !data) { alert("Couldn't delete that photo."); return; }
+  mine.delete(p.id); store.set("hunt-mine", JSON.stringify([...mine]));
+  $("#lb").close(); load();
+});
+
+// ---------- Upload ----------
+async function shrink(file) {
+  try {
+    const bmp = await createImageBitmap(file, {imageOrientation:"from-image"});
+    const s = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const out = await new Promise(r => c.toBlob(r, "image/jpeg", 0.85));
+    if (out && out.size) return out;
+  } catch {}
+  return file;
+}
+$("#picker").addEventListener("change", async e => {
+  const file = e.target.files?.[0], cid = pendingChallenge;
+  if (!file || !cid) return;
+  busy.add(cid); delete errs[cid]; renderChallenges();
+  try {
+    const blob = await shrink(file);
+    const type = ["image/jpeg","image/png","image/webp","image/gif"].includes(blob.type) ? blob.type : "image/jpeg";
+    const ext = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"}[type];
+    const path = `photos/${cid}/${crypto.randomUUID()}.${ext}`;
+    const up = await SB.storage.from(BUCKET).upload(path, blob, {contentType:type, upsert:false});
+    if (up.error) throw up.error;
+    const id = crypto.randomUUID();
+    const ins = await SB.from("hunt_photos").insert({id, challenge:cid, player:myName, path, owner_token:token});
+    if (ins.error) throw ins.error;
+    mine.add(id); store.set("hunt-mine", JSON.stringify([...mine]));
+    await load();
+  } catch (err) {
+    errs[cid] = /size|large/i.test(err?.message || "") ? "That photo is too big." : "Upload didn't go through. Try again.";
+  } finally {
+    busy.delete(cid); renderChallenges();
+  }
+});
+
+// ---------- Load ----------
+async function load() {
+  if (!SB) return;
+  const { data, error } = await SB.from("hunt_photos").select("id, challenge, player, path, created_at").order("created_at", {ascending:false}).limit(1000);
+  if (error) { $("#notice").textContent = "Couldn't load photos right now. Pull to refresh in a bit."; return; }
+  $("#notice").textContent = "";
+  photos = data;
+  renderAll();
+}
+renderWho();
+renderPlan();
+renderAll();
+if (!SB) $("#notice").textContent = "Photos couldn't load. Check your connection and reload.";
+load();
+setInterval(() => { if (document.visibilityState === "visible") load(); }, 20000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") load(); });
+</script>
+</body>
+</html>
