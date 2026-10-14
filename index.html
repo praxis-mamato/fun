@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NYC Girls Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single playbill-style column; each day is a marquee header over a timeline of stops */
+:root{
+  --bg:#f6f3f7; --paper:#ffffff; --ink:#1d1622; --muted:#6b5f73; --line:#e4dde8;
+  --accent:#b0175a; --accent-soft:#fbe6ef; --gold:#8a6510; --gold-soft:#f8efd9;
+  --display:"Gloock", Georgia, "Times New Roman", serif;
+  --body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141018; --paper:#1d1823; --ink:#f1ebf4; --muted:#a99db1; --line:#30283a;
+  --accent:#f0679f; --accent-soft:#3a1a2a; --gold:#e3bb5c; --gold-soft:#33291a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141018; --paper:#1d1823; --ink:#f1ebf4; --muted:#a99db1; --line:#30283a;
+  --accent:#f0679f; --accent-soft:#3a1a2a; --gold:#e3bb5c; --gold-soft:#33291a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:28px 56px}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:40px}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:grid;gap:14px;padding-block:8px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,10vw,76px);line-height:.98;margin:0;text-wrap:balance}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:15px}
+.facts b{color:var(--ink);font-weight:600}
+.shows{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.ticket{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:4px;position:relative}
+.ticket::after{content:"";position:absolute;right:-1px;top:50%;width:14px;height:24px;margin-top:-12px;background:var(--bg);border:1px solid var(--line);border-right:none;border-radius:12px 0 0 12px}
+.ticket .t-name{font-family:var(--display);font-size:26px;line-height:1.1}
+.ticket .t-when{font-family:var(--mono);font-size:13px;color:var(--accent)}
+.ticket .t-where{color:var(--muted);font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--muted);align-items:center}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;white-space:nowrap;vertical-align:2px}
+.pill.booked{background:var(--gold-soft);color:var(--gold)}
+.pill.tobook{background:var(--accent-soft);color:var(--accent)}
+.pill.opt{border:1px solid var(--line);color:var(--muted)}
+section.day{display:grid;gap:14px}
+.day-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:8px}
+.day-head h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,6vw,38px);margin:0;line-height:1.05}
+.day-head .date{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.day-head .theme{color:var(--muted);font-size:15px;flex-basis:100%}
+ol.stops{list-style:none;margin:0;padding:0;display:grid}
+ol.stops li{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+ol.stops li:last-child{border-bottom:none}
+.time{font-family:var(--mono);font-size:13px;color:var(--muted);padding-top:3px;font-variant-numeric:tabular-nums}
+.stop{min-width:0;display:grid;gap:3px}
+.stop .what{font-weight:600}
+.stop .what .pill{margin-left:6px}
+.stop .note{color:var(--muted);font-size:14.5px}
+li.highlight .what{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.15}
+.tips{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:10px}
+.tips h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.tips ul{margin:0;padding-left:18px;display:grid;gap:6px}
+footer{color:var(--muted);font-size:13px}
+@media (max-width:440px){ol.stops li{grid-template-columns:64px 1fr;gap:10px}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Fri Oct 23 – Tue Oct 27, 2026</div>
+    <h1>NYC Girls Trip</h1>
+    <div class="facts">
+      <span><b>Hotel</b> New York Marriott Marquis, Times Square</span>
+      <span><b>Arrive</b> Fri 5:57pm at Newark (UA 348)</span>
+    </div>
+  </header>
+
+  <div class="shows" aria-label="Broadway shows">
+    <div class="ticket">
+      <span class="t-name">The Great Gatsby</span>
+      <span class="t-when">SAT OCT 24 · 8:00 PM</span>
+      <span class="t-where">Broadway Theatre, Broadway at 53rd St</span>
+    </div>
+    <div class="ticket">
+      <span class="t-name">Wicked</span>
+      <span class="t-when">SUN OCT 25 · 7:00 PM</span>
+      <span class="t-where">Gershwin Theatre, W 51st St</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="pill booked">Booked</span>
+    <span class="pill tobook">To book</span>
+    <span class="pill opt">Optional</span>
+    <span>Times are a guide, not a schedule.</span>
+  </div>
+
+  <section class="day">
+    <div class="day-head"><span class="date">Friday · Oct 23</span><h2>Arrive &amp; first night out</h2></div>
+    <ol class="stops">
+      <li><span class="time">5:57pm</span><div class="stop"><span class="what">Land at Newark</span><span class="note">UberXL or NJ Transit to Penn Station ($17.25 each), then one stop to Times Square.</span></div></li>
+      <li><span class="time">~7:30pm</span><div class="stop"><span class="what">Check in at the Marriott Marquis</span></div></li>
+      <li><span class="time">8:30pm</span><div class="stop"><span class="what">Dinner at Guantanamera <span class="pill tobook">To book</span></span><span class="note">Cuban, 939 8th Ave. Live band starts at 9:30.</span></div></li>
+      <li class="highlight"><span class="time">~10:30pm</span><div class="stop"><span class="what">The Woo Woo speakeasy <span class="pill tobook">To book</span></span><span class="note">266 W 47th St, a block from the hotel. You walk in through a sex shop and give the password at the door. Dress up a little and bring ID.</span></div></li>
+    </ol>
+  </section>
+
+  <section class="day">
+    <div class="day-head"><span class="date">Saturday · Oct 24</span><h2>Park, drag brunch, the Plaza &amp; Gatsby</h2></div>
+    <ol class="stops">
+      <li><span class="time">8:30am</span><div class="stop"><span class="what">Walk up to Central Park</span><span class="note">The Mall, Bethesda Terrace, Bow Bridge.</span></div></li>
+      <li class="highlight"><span class="time">~11:30am</span><div class="stop"><span class="what">Drag brunch at LIPS <span class="pill tobook">To book</span></span><span class="note">227 E 56th St. $52 all-you-can-drink brunch and show, plus tax and tip.</span></div></li>
+      <li class="highlight"><span class="time">1:45pm</span><div class="stop"><span class="what">Champagne Bar at The Plaza <span class="pill tobook">To book</span></span><span class="note">768 Fifth Ave, overlooking the Pulitzer Fountain. Bubbles and light bites. Smart casual: no shorts, caps or tank tops.</span></div></li>
+      <li><span class="time">2:45pm</span><div class="stop"><span class="what">Fifth Avenue shopping</span><span class="note">Walk south from the Plaza to Rockefeller Center and St. Patrick's Cathedral.</span></div></li>
+      <li><span class="time">~4:15pm</span><div class="stop"><span class="what">Diwali at Times Square</span><span class="note">Free festival right by the hotel.</span></div></li>
+      <li><span class="time">4:45pm</span><div class="stop"><span class="what">Rest and get ready</span></div></li>
+      <li><span class="time">6:00pm</span><div class="stop"><span class="what">Pre-show dinner on Restaurant Row <span class="pill tobook">To book</span></span><span class="note">Joe Allen or Becco, W 46th St.</span></div></li>
+      <li class="highlight"><span class="time">8:00pm</span><div class="stop"><span class="what">The Great Gatsby <span class="pill tobook">To book</span></span><span class="note">Broadway Theatre.</span></div></li>
+      <li><span class="time">After</span><div class="stop"><span class="what">Nightcap at Bar 54 <span class="pill opt">Optional</span></span><span class="note">54th-floor rooftop at the Hyatt Centric, a block from the hotel. Open till 1am.</span></div></li>
+    </ol>
+  </section>
+
+  <section class="day">
+    <div class="day-head"><span class="date">Sunday · Oct 25</span><h2>Downtown, Brooklyn &amp; Wicked</h2></div>
+    <ol class="stops">
+      <li><span class="time">8:30am</span><div class="stop"><span class="what">Subway downtown</span><span class="note">1 train from Times Sq–42 St to South Ferry.</span></div></li>
+      <li><span class="time">9:00am</span><div class="stop"><span class="what">Staten Island Ferry</span><span class="note">Free. Ride over and back for Statue of Liberty views.</span></div></li>
+      <li><span class="time">10:15am</span><div class="stop"><span class="what">Wall St and the 9/11 Memorial</span><span class="note">The Memorial pools and the Oculus.</span></div></li>
+      <li><span class="time">11:30am</span><div class="stop"><span class="what">Century 21</span><span class="note">Designer discount shopping, 22 Cortlandt St.</span></div></li>
+      <li><span class="time">12:30pm</span><div class="stop"><span class="what">Walk the Brooklyn Bridge</span></div></li>
+      <li><span class="time">1:30pm</span><div class="stop"><span class="what">Lunch at Cecconi's DUMBO <span class="pill tobook">To book</span></span><span class="note">55 Water St, skyline views. A Real Housewives favorite.</span></div></li>
+      <li><span class="time">3:00pm</span><div class="stop"><span class="what">Brooklyn Flea</span><span class="note">Vintage and makers under the DUMBO Archway, plus the Washington St photo.</span></div></li>
+      <li><span class="time">3:45pm</span><div class="stop"><span class="what">A train back to the hotel</span></div></li>
+      <li class="highlight"><span class="time">5:00pm</span><div class="stop"><span class="what">Chalong Southern Thai <span class="pill booked">Booked</span></span><span class="note">749 9th Ave at 50th St. Michelin Bib Gourmand.</span></div></li>
+      <li class="highlight"><span class="time">7:00pm</span><div class="stop"><span class="what">Wicked <span class="pill tobook">To book</span></span><span class="note">Gershwin Theatre, a few blocks from dinner. Leave Chalong around 6:40.</span></div></li>
+      <li><span class="time">~9:45pm</span><div class="stop"><span class="what">The Nines piano bar <span class="pill opt">Optional</span></span><span class="note">Glam piano bar in NoHo, a Real Housewives hangout.</span></div></li>
+    </ol>
+  </section>
+
+  <section class="day">
+    <div class="day-head"><span class="date">Monday · Oct 26</span><h2>Village, food tour &amp; Edge at sunset</h2></div>
+    <ol class="stops">
+      <li><span class="time">9:30am</span><div class="stop"><span class="what">West Village</span><span class="note">1 train to Christopher St. Coffee and Bleecker St.</span></div></li>
+      <li><span class="time">11:00am</span><div class="stop"><span class="what">SoHo shopping</span><span class="note">Coffee at Ground Support, a Real Housewives pick.</span></div></li>
+      <li class="highlight"><span class="time">~1:00pm</span><div class="stop"><span class="what">Chelsea Market &amp; High Line food tour <span class="pill tobook">To book</span></span><span class="note">3 hours of tastings that add up to lunch. Meets at Chelsea Market, 75 9th Ave.</span></div></li>
+      <li><span class="time">~4:00pm</span><div class="stop"><span class="what">Walk the High Line</span><span class="note">North to Hudson Yards and the Vessel.</span></div></li>
+      <li class="highlight"><span class="time">5:15pm</span><div class="stop"><span class="what">Edge at sunset <span class="pill tobook">To book</span></span><span class="note">Outdoor sky deck at 30 Hudson Yards. Sunset is 5:59pm.</span></div></li>
+      <li><span class="time">7:00pm</span><div class="stop"><span class="what">Farewell dinner <span class="pill tobook">To book</span></span><span class="note">Peak on the 101st floor of the same building (window tables, $145 each), or Il Cantinori in the Village.</span></div></li>
+      <li><span class="time">Late</span><div class="stop"><span class="what">Le Bain at The Standard <span class="pill opt">Optional</span></span><span class="note">Rooftop club at The Standard, High Line (the Boom Boom Room itself is private events only). 21+. Check hours before you go.</span></div></li>
+    </ol>
+  </section>
+
+  <section class="day">
+    <div class="day-head"><span class="date">Tuesday · Oct 27</span><h2>Fly home</h2></div>
+  </section>
+
+  <div class="tips">
+    <h3>Good to know</h3>
+    <ul>
+      <li>Subway: tap your own phone or card at the turnstile. Rides are free after 12 in a week.</li>
+      <li>Wear comfy shoes Saturday and Sunday. Both are big walking days.</li>
+      <li>Want cheap show seats too? Wicked and Gatsby both run $40 to $55 lotteries and day-of rush, max 2 tickets per winner.</li>
+    </ul>
+  </div>
+
+  <footer>Planned Oct 12, 2026. Prices and times can change; check before you go.</footer>
+</div>
+</body>
+</html>
