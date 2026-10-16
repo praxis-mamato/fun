@@ -200,7 +200,8 @@ const CHALLENGES = [
   {id:"sun-washington", day:"sun", pts:15, name:"The DUMBO shot", hint:"Manhattan Bridge framed down Washington Street."},
   {id:"sun-flea", day:"sun", pts:10, name:"Flea market find", hint:"Show off your best Brooklyn Flea score."},
   {id:"sun-green", day:"sun", pts:15, name:"Defying gravity", hint:"Wear something green to Wicked and pose at the Gershwin."},
-  {id:"mon-bite", day:"mon", pts:10, name:"Best bite of the food tour", hint:"Your favorite tasting at Chelsea Market."},
+  {id:"mon-library", day:"mon", pts:10, name:"Quiet, please", hint:"Pose with a library lion, Patience or Fortitude, out front on Fifth Ave."},
+  {id:"mon-moma", day:"mon", pts:15, name:"Starry Night squad", hint:"All three of you with a famous painting at MoMA."},
   {id:"mon-highline", day:"mon", pts:10, name:"High Line art", hint:"Pose with a sculpture or mural along the High Line."},
   {id:"mon-sunset", day:"mon", pts:20, name:"Golden hour on the High Line", hint:"Sunset over the Hudson. Skyline required."},
   {id:"mon-rh", day:"mon", pts:15, name:"Dinner under glass", hint:"Glasses raised at RH Rooftop."},
@@ -219,8 +220,8 @@ const PLAN = [
     ["9:00am","Walk up to Central Park"],["11:30am","Drag brunch at LIPS"],["~1:30pm","Champagne Bar at The Plaza (walk-in)"],["~2:30pm","Fifth Avenue shopping"],["~3:45pm","Carnegie Deli, 834 Seventh Ave (walk-in)"],["4:30pm","Rest and get ready"],["6:00pm","Dinner at the Broadway Lounge (hotel, 8th floor)"],["8:00pm","The Great Gatsby, Broadway Theatre"],["After","Drinks at Le Bain, The Standard"]]},
   {key:"sun", iso:"2026-10-25", title:"Ferry, Brooklyn & Wicked", stops:[
     ["9:00am","1 train to South Ferry"],["9:30am","Staten Island Ferry"],["11:00am","9/11 Memorial"],["12:00pm","Walk the Brooklyn Bridge"],["~1:00pm","Lunch at Cecconi's DUMBO"],["After","Brooklyn Flea"],["5:00pm","Chalong Southern Thai"],["7:00pm","Wicked, Gershwin Theatre"]]},
-  {key:"mon", iso:"2026-10-26", title:"Food tour, Village & a speakeasy", stops:[
-    ["9:15am","Head to Chelsea Market"],["10:00am","Chelsea Market & High Line food tour"],["~1:15pm","West Village & SoHo"],["~4:00pm","Walk the High Line, then rest"],["7:00pm","Dinner at RH Rooftop, 9 Ninth Ave"],["~9:00pm","Speakeasy: Employees Only, 510 Hudson St"],["After","Nightcap at The View lounge (optional)"]]},
+  {key:"mon", iso:"2026-10-26", title:"Library, MoMA, High Line & a speakeasy", stops:[
+    ["9:30am","Bryant Park"],["10:00am","New York Public Library (free)"],["~11:30am","MoMA, 11 W 53rd St"],["~2:30pm","Rest and change at the hotel"],["~5:15pm","High Line at sunset, Hudson Yards south"],["7:00pm","Dinner at RH Rooftop, 9 Ninth Ave"],["~9:00pm","Speakeasy: Employees Only, 510 Hudson St"]]},
   {key:"tue", iso:"2026-10-27", title:"Fly home", stops:[]},
 ];
 const BY_ID = Object.fromEntries(CHALLENGES.map(c => [c.id, c]));
