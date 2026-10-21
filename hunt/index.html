@@ -49,7 +49,7 @@ nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);bord
 .board li{display:grid;grid-template-columns:28px 32px 1fr auto;gap:10px;align-items:center}
 .board .rank{font-family:var(--mono);color:var(--muted);font-size:13px}
 .board img{width:32px;height:32px;border-radius:50%;object-fit:cover}
-.board .pts{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.board .pts{font-family:var(--mono);font-weight:500;color:var(--accent);font-size:12.5px;text-align:right}
 .empty{color:var(--muted);font-size:14.5px}
 /* challenges */
 .day h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 10px;border-bottom:2px solid var(--ink);padding-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
@@ -112,9 +112,9 @@ footer{color:var(--muted);font-size:13px;margin-top:28px}
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">NYC · Oct 23 – 27, 2026</div>
+    <div class="eyebrow">NYC · Oct 23 – 27, 2026 · Season 1</div>
     <h1>The Big Apple Hunt</h1>
-    <p class="sub">Snap each challenge, upload the photo, rack up points. Each challenge scores once per person.</p>
+    <p class="sub">The Real Housewives of Times Square, starring the three of you. Snap each challenge, upload the photo and climb from Friend of to Holding the apple. Each challenge scores once per person.</p>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -134,7 +134,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px}
   <section class="pane on" id="pane-hunt">
     <div class="score">
       <h2>Leaderboard</h2>
-      <p class="prize">👑 <b>The prize:</b> the winner is crowned at the speakeasy on Monday night and wears the I ❤ NY crown and sash.</p>
+      <p class="prize">👑 <b>The prize:</b> the top scorer is crowned at Employees Only on Monday night, wears the I ❤ NY crown and sash, and the other two buy the first round. Consider it our reunion.</p>
       <div>
         <div class="bar" aria-hidden="true"><i id="teamBar"></i></div>
         <div class="bar-label" id="teamLabel">Team progress</div>
@@ -180,39 +180,48 @@ const DAYS = [
   {key:"sat", label:"Saturday", date:"Oct 24"},
   {key:"sun", label:"Sunday", date:"Oct 25"},
   {key:"mon", label:"Monday", date:"Oct 26"},
-  {key:"any", label:"Anytime", date:"All trip"},
+  {key:"any", label:"Bravo bonus round", date:"Anytime"},
 ];
 const CHALLENGES = [
-  {id:"fri-squad", day:"fri", pts:5,  name:"Squad has landed", hint:"First group selfie at Newark."},
-  {id:"fri-redsteps", day:"fri", pts:10, name:"Red Steps in Times Square", hint:"All three of you on the TKTS red steps, lights behind you."},
-  {id:"fri-view", day:"fri", pts:15, name:"Toast at The View", hint:"Glasses up with the city spinning below on the 47th floor."},
-  {id:"fri-woowoo", day:"fri", pts:20, name:"Through the secret door", hint:"Proof you made it into The Woo Woo."},
-  {id:"sat-bow", day:"sat", pts:10, name:"Bow Bridge moment", hint:"Central Park's prettiest bridge, all three of you on it."},
-  {id:"sat-bethesda", day:"sat", pts:10, name:"Angel of the Waters", hint:"The fountain at Bethesda Terrace."},
-  {id:"sat-queen", day:"sat", pts:20, name:"Selfie with a queen", hint:"Get a LIPS performer in the shot."},
-  {id:"sat-plaza", day:"sat", pts:15, name:"Champagne at The Plaza", hint:"Coupes clinking at the Champagne Bar."},
-  {id:"sat-bags", day:"sat", pts:10, name:"Fifth Avenue haul", hint:"Shopping bag pose. Bonus style points for a store-front backdrop."},
-  {id:"sat-pastrami", day:"sat", pts:15, name:"Tower of pastrami", hint:"Carnegie Deli sandwich next to someone's face for scale."},
-  {id:"sat-gatsby", day:"sat", pts:15, name:"Old sport", hint:"Your best 1920s pose under the Gatsby marquee."},
-  {id:"sat-lebain", day:"sat", pts:15, name:"Le Bain after dark", hint:"Rooftop selfie at The Standard with the city behind you."},
-  {id:"sun-liberty", day:"sun", pts:15, name:"Hi, Lady Liberty", hint:"Statue of Liberty in the frame from the Staten Island Ferry."},
+  {id:"fri-squad", day:"fri", pts:5,  name:"The cast has landed", hint:"First group selfie at Newark. Sunglasses on, like it's a cast trip."},
+  {id:"fri-titanium", day:"fri", pts:10, name:"Titanium treatment", hint:"Show off a Marriott Titanium perk: the upgrade, the welcome gift, or the view from the room."},
+  {id:"fri-redsteps", day:"fri", pts:15, name:"Opening credits", hint:"All three of you on the Times Square red steps, each holding an apple (real or pretend) like the RHONY intro. Say your tagline out loud."},
+  {id:"fri-view", day:"fri", pts:15, name:"The room is spinning (on purpose)", hint:"Toast at The View, 47 floors up. One shot when you sit down, and one once the restaurant has turned to a new view."},
+  {id:"fri-woowoo", day:"fri", pts:20, name:"Through the secret door", hint:"Optional late night: proof you found the password and made it into The Woo Woo."},
+  {id:"sat-bow", day:"sat", pts:10, name:"Bow Bridge cast photo", hint:"All three of you on Bow Bridge in Central Park, striking your best cast-photo pose."},
+  {id:"sat-queen", day:"sat", pts:20, name:"Kiki with a queen", hint:"Selfie with a LIPS performer. Double the fun if she reads one of you first."},
+  {id:"sat-tip", day:"sat", pts:10, name:"Make it rain", hint:"Catch someone tipping a queen mid-number at LIPS."},
+  {id:"sat-plaza", day:"sat", pts:15, name:"Eloise grew up", hint:"Champagne at The Plaza. Pinkies up, coupes clinking."},
+  {id:"sat-bags", day:"sat", pts:10, name:"Fifth Avenue haul", hint:"Shopping bag pose on Fifth Ave. Bonus style points for a flagship store behind you."},
+  {id:"sat-pastrami", day:"sat", pts:15, name:"Tower of pastrami", hint:"Carnegie Deli is back after almost 10 years. Sandwich next to someone's face for scale."},
+  {id:"sat-lounge", day:"sat", pts:10, name:"Dinner over Times Square", hint:"Glasses up at the Broadway Lounge, with the lights of Times Square in the window behind you."},
+  {id:"sat-gatsby", day:"sat", pts:15, name:"Old sport", hint:"Your best 1920s pose under the Gatsby marquee. Pearls, feathers or a flapper shimmy all count."},
+  {id:"sat-lebain", day:"sat", pts:15, name:"Le Bain after dark", hint:"Rooftop selfie at The Standard with the city lit up behind you."},
+  {id:"sun-liberty", day:"sun", pts:15, name:"Hi, Lady Liberty", hint:"Strike her pose, torch arm up, with the Statue of Liberty behind you on the Staten Island Ferry."},
   {id:"sun-bridge", day:"sun", pts:10, name:"Middle of the Brooklyn Bridge", hint:"Mid-span with the cables behind you."},
-  {id:"sun-washington", day:"sun", pts:15, name:"The DUMBO shot", hint:"Manhattan Bridge framed down Washington Street."},
+  {id:"sun-cecconis", day:"sun", pts:15, name:"Lunch like Sai", hint:"Cecconi's DUMBO is RHONY's Sai De Silva pick. Sunglasses on, glass up, mid-gossip, with the bridge behind you."},
+  {id:"sun-washington", day:"sun", pts:15, name:"The DUMBO shot", hint:"The Manhattan Bridge framed down Washington Street."},
   {id:"sun-flea", day:"sun", pts:10, name:"Flea market find", hint:"Show off your best Brooklyn Flea score."},
-  {id:"sun-green", day:"sun", pts:15, name:"Defying gravity", hint:"Wear something green to Wicked and pose at the Gershwin."},
-  {id:"mon-library", day:"any", pts:10, name:"Quiet, please", hint:"Pose with a library lion, Patience or Fortitude, out front on Fifth Ave."},
-  {id:"mon-moma", day:"mon", pts:15, name:"Starry Night squad", hint:"All three of you with a famous painting at MoMA."},
+  {id:"sun-chalong", day:"sun", pts:10, name:"Spice check", hint:"At Chalong, catch the face of whoever is brave enough to order the spiciest thing on the menu."},
+  {id:"sun-green", day:"sun", pts:15, name:"Defying gravity", hint:"Someone in pink, someone in green, at the Gershwin before Wicked. Glinda-style hair toss encouraged."},
+  {id:"mon-bite", day:"mon", pts:15, name:"Food critics", hint:"Everyone holding their favorite tasting from the Chelsea Market tour, with your most serious food-critic faces."},
   {id:"mon-highline", day:"mon", pts:10, name:"High Line art", hint:"Pose with a sculpture or mural along the High Line."},
-  {id:"mon-bite", day:"mon", pts:15, name:"Best bite of the food tour", hint:"Everyone holding their favorite tasting at Chelsea Market."},
-  {id:"mon-rh", day:"mon", pts:15, name:"Dinner under glass", hint:"Glasses raised at RH Rooftop."},
-  {id:"mon-speakeasy", day:"mon", pts:20, name:"The fortune teller knows", hint:"Proof you made it past the fortune teller into Employees Only."},
-  {id:"any-cab", day:"any", pts:5,  name:"Taxi!", hint:"Hailing pose with a yellow cab."},
+  {id:"mon-moma", day:"mon", pts:15, name:"Starry Night squad", hint:"All three of you with a famous painting at MoMA. Recreate it if you're brave."},
+  {id:"mon-rh", day:"mon", pts:15, name:"Dinner under glass", hint:"Glasses raised under the glass roof at RH Rooftop."},
+  {id:"mon-speakeasy", day:"mon", pts:20, name:"The fortune teller knows", hint:"Proof you made it past the fortune teller into Employees Only. This is where the winner gets crowned."},
+  {id:"any-confessional", day:"any", pts:15, name:"Confessional", hint:"Solo shot, Housewife confessional style: fancy backdrop, chin up, side eye, and something to say."},
+  {id:"any-tagline", day:"any", pts:10, name:"Write your tagline", hint:"Write your Housewife tagline on a napkin or cocktail menu and hold it up."},
+  {id:"any-reunion", day:"any", pts:10, name:"Reunion look", hint:"Your most dressed-up outfit of the trip, full length, gown energy."},
+  {id:"any-mazel", day:"any", pts:10, name:"Mazel of the day", hint:"Andy isn't in town, so you host. Toast whoever did the best thing today and snap the moment."},
+  {id:"mon-library", day:"any", pts:10, name:"Quiet, please", hint:"Pose with a library lion, Patience or Fortitude, out front on Fifth Ave."},
+  {id:"any-cab", day:"any", pts:5,  name:"Taxi!", hint:"Hailing pose with a yellow cab, Carrie-Bradshaw style."},
   {id:"any-slice", day:"any", pts:10, name:"The New York fold", hint:"Folding a pizza slice the right way."},
   {id:"any-ilny", day:"any", pts:10, name:"I ❤ NY", hint:"Spot or wear the classic logo."},
-  {id:"any-bagel", day:"any", pts:5,  name:"Bagel break", hint:"Any bagel, any schmear."},
   {id:"any-pigeon", day:"any", pts:5,  name:"Local resident", hint:"A New York pigeon. Must be in focus."},
   {id:"any-bravo", day:"any", pts:50, name:"Bravo sighting", hint:"Spot a Bravolebrity in the wild. Jackpot."},
 ];
+// Housewife tiers for the leaderboard, by points.
+const tier = pts => pts >= 200 ? "Holding the apple 🍎" : pts >= 100 ? "Full-time Housewife" : "Friend of";
 const PLAN = [
   {key:"fri", iso:"2026-10-23", title:"Arrive & easy first night", stops:[
     ["5:57pm","Land at Newark (UA 348)"],["~7:30pm","Check in, Marriott Marquis"],["8:30pm","Dinner at The View (47th floor)"],["Late","The Woo Woo speakeasy (optional)"]]},
@@ -303,7 +312,7 @@ function renderBoard() {
   if (!rows.length) { board.append(el("li", "empty", "No photos yet. First one to snap takes the lead.")); return; }
   rows.forEach((r, i) => {
     const li = el("li");
-    li.append(el("span", "rank", "#" + (i + 1)), avatar(r.name), el("span", null, r.name + (isMe(r.name) ? " (you)" : "")), el("span", "pts", r.pts + " pts"));
+    li.append(el("span", "rank", "#" + (i + 1)), avatar(r.name), el("span", null, r.name + (isMe(r.name) ? " (you)" : "")), el("span", "pts", r.pts + " pts · " + tier(r.pts)));
     board.append(li);
   });
 }
