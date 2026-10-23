@@ -72,6 +72,14 @@ nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);bord
 .thumbs:empty{display:none}
 .thumbs button{border:none;padding:0;background:none;flex:none}
 .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;display:block;background:var(--line)}
+/* trip album */
+.album{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px}
+.album h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.album p{margin:0;color:var(--muted);font-size:14.5px}
+.album input[type=text]{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+.filters button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 /* photo wall */
 .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .tile{border:none;padding:0;background:var(--paper);border-radius:10px;overflow:hidden;text-align:left;display:grid;border:1px solid var(--line)}
@@ -145,8 +153,22 @@ footer{color:var(--muted);font-size:13px;margin-top:28px}
   </section>
 
   <section class="pane" id="pane-photos">
+    <div class="album">
+      <h2>Trip album</h2>
+      <p>Any photo from the trip, no challenge needed. Pick as many as you like at once. These don't count for points.</p>
+      <input type="text" id="caption" maxlength="120" placeholder="Caption (optional), like “Sunset from The View”" aria-label="Caption">
+      <div class="card-actions">
+        <button class="shoot" id="albumAdd" type="button">📷 Add trip photos</button>
+        <span class="status" id="albumStatus"></span>
+      </div>
+    </div>
+    <div class="filters" role="group" aria-label="Show">
+      <button aria-pressed="true" data-f="all">Everything</button>
+      <button aria-pressed="false" data-f="trip">Trip album</button>
+      <button aria-pressed="false" data-f="hunt">Hunt photos</button>
+    </div>
     <div id="wall" class="wall"></div>
-    <p id="wallEmpty" class="empty">Nothing here yet. Photos from the hunt show up here for everyone.</p>
+    <p id="wallEmpty" class="empty">Nothing here yet. Trip photos and hunt photos show up here for everyone.</p>
   </section>
 
   <section class="pane" id="pane-plan">
@@ -167,6 +189,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px}
 </dialog>
 
 <input type="file" id="picker" accept="image/*" hidden>
+<input type="file" id="albumPicker" accept="image/*" multiple hidden>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
@@ -234,6 +257,7 @@ const PLAN = [
   {key:"tue", iso:"2026-10-27", title:"Fly home", stops:[["10:00am","Optional: Bryant Park and the Library, if the flight is later"]]},
 ];
 const BY_ID = Object.fromEntries(CHALLENGES.map(c => [c.id, c]));
+const TRIP = "trip";        // challenge value for trip album photos (no points)
 
 // ---------- State ----------
 const store = {
@@ -251,6 +275,7 @@ const busy = new Set(), errs = {};
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const photoUrl = p => SB.storage.from(BUCKET).getPublicUrl(p.path).data.publicUrl;
+const label = p => p.challenge === TRIP ? (p.caption || "Trip album") : (BY_ID[p.challenge]?.name || "");
 const isMe = name => !!myName && name.toLowerCase() === myName.toLowerCase();
 function avatar(name) {
   let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
@@ -355,26 +380,33 @@ function renderChallenges() {
   }
 }
 
+let wallFilter = "all";
 function renderWall() {
   const wall = $("#wall"); wall.replaceChildren();
-  $("#wallEmpty").hidden = photos.length > 0;
-  for (const p of photos) {
+  const shown = photos.filter(p => wallFilter === "all" || (wallFilter === "trip") === (p.challenge === TRIP));
+  $("#wallEmpty").hidden = shown.length > 0;
+  for (const p of shown) {
     const t = el("button", "tile");
-    const img = el("img"); img.alt = BY_ID[p.challenge]?.name || "Trip photo"; img.loading = "lazy"; img.src = photoUrl(p);
-    t.append(img, el("span", null, p.player + " · " + (BY_ID[p.challenge]?.name || "")));
+    const img = el("img"); img.alt = label(p) || "Trip photo"; img.loading = "lazy"; img.src = photoUrl(p);
+    t.append(img, el("span", null, p.player + " · " + label(p)));
     t.addEventListener("click", () => openPhoto(p));
     wall.append(t);
   }
 }
+document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
+  wallFilter = b.dataset.f;
+  document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderWall();
+}));
 
 // ---------- Lightbox ----------
 let lbPhoto = null;
 function openPhoto(p) {
   lbPhoto = p;
   $("#lbImg").src = photoUrl(p);
-  $("#lbImg").alt = BY_ID[p.challenge]?.name || "Trip photo";
+  $("#lbImg").alt = label(p) || "Trip photo";
   $("#lbWho").textContent = p.player + (isMe(p.player) ? " (you)" : "");
-  $("#lbWhat").textContent = (BY_ID[p.challenge]?.name || "") + " · " + new Date(p.created_at).toLocaleString([], {weekday:"short", hour:"numeric", minute:"2-digit"});
+  $("#lbWhat").textContent = label(p) + " · " + new Date(p.created_at).toLocaleString([], {weekday:"short", hour:"numeric", minute:"2-digit"});
   $("#lbDel").hidden = !mine.has(p.id);
   $("#lb").showModal();
 }
@@ -401,33 +433,60 @@ async function shrink(file) {
   } catch {}
   return file;
 }
+async function uploadOne(file, cid, caption) {
+  const blob = await shrink(file);
+  const type = ["image/jpeg","image/png","image/webp","image/gif"].includes(blob.type) ? blob.type : "image/jpeg";
+  const ext = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"}[type];
+  const path = `photos/${cid}/${crypto.randomUUID()}.${ext}`;
+  const up = await SB.storage.from(BUCKET).upload(path, blob, {contentType:type, upsert:false});
+  if (up.error) throw up.error;
+  const id = crypto.randomUUID();
+  const row = {id, challenge:cid, player:myName, path, owner_token:token};
+  if (caption) row.caption = caption;
+  const ins = await SB.from("hunt_photos").insert(row);
+  if (ins.error) throw ins.error;
+  mine.add(id); store.set("hunt-mine", JSON.stringify([...mine]));
+}
+const errText = err => /size|large/i.test(err?.message || "") ? "That photo is too big." : "Upload didn't go through. Try again.";
 $("#picker").addEventListener("change", async e => {
   const file = e.target.files?.[0], cid = pendingChallenge;
   if (!file || !cid) return;
   busy.add(cid); delete errs[cid]; renderChallenges();
   try {
-    const blob = await shrink(file);
-    const type = ["image/jpeg","image/png","image/webp","image/gif"].includes(blob.type) ? blob.type : "image/jpeg";
-    const ext = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"}[type];
-    const path = `photos/${cid}/${crypto.randomUUID()}.${ext}`;
-    const up = await SB.storage.from(BUCKET).upload(path, blob, {contentType:type, upsert:false});
-    if (up.error) throw up.error;
-    const id = crypto.randomUUID();
-    const ins = await SB.from("hunt_photos").insert({id, challenge:cid, player:myName, path, owner_token:token});
-    if (ins.error) throw ins.error;
-    mine.add(id); store.set("hunt-mine", JSON.stringify([...mine]));
+    await uploadOne(file, cid);
     await load();
   } catch (err) {
-    errs[cid] = /size|large/i.test(err?.message || "") ? "That photo is too big." : "Upload didn't go through. Try again.";
+    errs[cid] = errText(err);
   } finally {
     busy.delete(cid); renderChallenges();
   }
+});
+$("#albumAdd").addEventListener("click", () => {
+  if (!SB) return;
+  if (!myName) { $("#whoInput").focus(); $("#who").scrollIntoView({behavior:"smooth", block:"center"}); return; }
+  $("#albumPicker").value = ""; $("#albumPicker").click();
+});
+$("#albumPicker").addEventListener("change", async e => {
+  const files = [...(e.target.files || [])];
+  if (!files.length) return;
+  const caption = $("#caption").value.trim().slice(0, 120);
+  const status = $("#albumStatus"), btn = $("#albumAdd");
+  btn.disabled = true; status.className = "status";
+  let ok = 0, lastErr = null;
+  for (const [i, f] of files.entries()) {
+    status.textContent = `Uploading ${i + 1} of ${files.length}…`;
+    try { await uploadOne(f, TRIP, caption); ok++; } catch (err) { lastErr = err; }
+  }
+  btn.disabled = false;
+  if (lastErr) { status.className = "status err"; status.textContent = `${ok} of ${files.length} added. ${errText(lastErr)}`; }
+  else { status.textContent = ok === 1 ? "Added to the album 🎉" : `${ok} photos added 🎉`; $("#caption").value = ""; }
+  await load();
 });
 
 // ---------- Load ----------
 async function load() {
   if (!SB) return;
-  const { data, error } = await SB.from("hunt_photos").select("id, challenge, player, path, created_at").order("created_at", {ascending:false}).limit(1000);
+  const { data, error } = await SB.from("hunt_photos").select("id, challenge, player, path, caption, created_at").order("created_at", {ascending:false}).limit(1000);
   if (error) { $("#notice").textContent = "Couldn't load photos right now. Pull to refresh in a bit."; return; }
   $("#notice").textContent = "";
   photos = data;
